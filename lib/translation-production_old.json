@@ -1,0 +1,8 @@
+{
+  "static-price-from-label": "from",
+  "static-billing-form-country-title": "Country",
+  "static-summary-tax-label": "Tax {{percent}}",
+  "static-terms-and-conditions-checkbox-label": "I have read and accept the",
+  "static-terms-and-conditions-message": "You must accept the terms and conditions to proceed.",
+  "static-price-filter-label": "Price Range"
+}

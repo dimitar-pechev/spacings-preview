@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>E-Commerce Portal</title>
+    <style>
+      growth-hub {
+        display: block;
+        width: 100%;
+        min-height: 600px;
+      }
+
+      /*
+       * Optional host-popup mode (GH-904): simulates CMS action-link lightboxes with
+       * extreme z-index overlays. Toggle via the control panel — default is inline embed.
+       */
+      .host-popup-backdrop {
+        position: fixed;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.55);
+        z-index: 1000009999;
+      }
+
+      .host-popup-backdrop.open {
+        display: flex;
+      }
+
+      .host-popup-panel {
+        position: relative;
+        z-index: 1000009999;
+        width: min(920px, 94vw);
+        height: min(88vh, 900px);
+        overflow: auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+      }
+
+      .host-popup-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid #e5e5e5;
+        background: #fafafa;
+        font-size: 14px;
+      }
+
+      .control-panel-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .host-popup-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-left: auto;
+      }
+
+      .host-popup-controls label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- control panel -->
+    <div style="margin-bottom: 10px; border: 1px solid black; padding: 10px">
+      <div class="control-panel-top-row">
+        <div>
+          <label for="environment-selector">Environment: </label>
+          <select id="environment-selector"></select>
+        </div>
+
+        <div class="host-popup-controls">
+          <label
+            for="host-popup-mode"
+            title="Simulates a host-site lightbox with extreme z-index for GH-904 Stripe checkout testing"
+          >
+            <input type="checkbox" id="host-popup-mode" />
+            Embed in host popup
+          </label>
+          <button id="open-host-popup" type="button" disabled>
+            Open host popup
+          </button>
+        </div>
+      </div>
+      <hr />
+
+      <!-- populated via script below -->
+      <div id="org-selector"></div>
+      <div>
+        <input
+          type="text"
+          id="org-slug-input"
+          placeholder="Type another slug..."
+        />
+        <button id="set-org-slug-button">Set</button>
+      </div>
+      <hr />
+
+      <!-- populated via script below -->
+      <label for="language-selector">Language: </label>
+      <select id="language-selector"></select>
+    </div>
+
+    <!-- default inline embed -->
+    <div id="inline-gh-host">
+      <growth-hub
+        id="growth-hub"
+        slug="dpechev3"
+        initial-route="dashboard"
+      ></growth-hub>
+    </div>
+
+    <!-- optional host popup container (empty until host-popup mode is enabled) -->
+    <div
+      id="host-popup"
+      class="host-popup-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Simulated host popup"
+    >
+      <div class="host-popup-panel">
+        <div class="host-popup-header">
+          <span>Host popup (z-index: 1000009999)</span>
+          <button id="close-host-popup-inline" type="button">✕</button>
+        </div>
+        <div id="popup-gh-host"></div>
+      </div>
+    </div>
+
+    <!-- control panel scripts -->
+    <script>
+      const HOST_POPUP_MODE_KEY = "webc-host-popup-mode";
+      const HOST_POPUP_OPEN_KEY = "webc-host-popup-open";
+
+      const growthHub = document.getElementById("growth-hub");
+      const inlineGhHost = document.getElementById("inline-gh-host");
+      const popupGhHost = document.getElementById("popup-gh-host");
+      const hostPopup = document.getElementById("host-popup");
+      const hostPopupModeCheckbox = document.getElementById("host-popup-mode");
+      const openHostPopupButton = document.getElementById("open-host-popup");
+      const closeHostPopupInlineButton = document.getElementById(
+        "close-host-popup-inline",
+      );
+
+      const setHostPopupOpen = (open) => {
+        hostPopup.classList.toggle("open", open);
+        localStorage.setItem(HOST_POPUP_OPEN_KEY, open ? "1" : "0");
+      };
+
+      const setHostPopupControlsEnabled = (enabled) => {
+        openHostPopupButton.disabled = !enabled;
+      };
+
+      const applyHostPopupMode = (enabled, { openPopup = true } = {}) => {
+        localStorage.setItem(HOST_POPUP_MODE_KEY, enabled ? "1" : "0");
+
+        if (enabled) {
+          popupGhHost.appendChild(growthHub);
+          setHostPopupControlsEnabled(true);
+          setHostPopupOpen(openPopup);
+        } else {
+          inlineGhHost.appendChild(growthHub);
+          setHostPopupControlsEnabled(false);
+          setHostPopupOpen(false);
+        }
+      };
+
+      hostPopupModeCheckbox.addEventListener("change", (event) => {
+        applyHostPopupMode(event.target.checked);
+      });
+
+      openHostPopupButton.addEventListener("click", () =>
+        setHostPopupOpen(true),
+      );
+      closeHostPopupInlineButton.addEventListener("click", () =>
+        setHostPopupOpen(false),
+      );
+
+      // populate environment selector with options for the different environments
+      const environmentSelector = document.getElementById(
+        "environment-selector",
+      );
+      const environments = [
+        "http://localhost:3000",
+        "https://e-commerce-staging.officernd.com",
+        "https://e-commerce.officernd.com",
+      ];
+      environments.forEach((environment) => {
+        const option = document.createElement("option");
+        option.value = environment;
+        option.textContent = environment;
+        environmentSelector.appendChild(option);
+      });
+      const DEFAULT_ENVIRONMENT = "https://e-commerce-staging.officernd.com";
+      environmentSelector.value =
+        localStorage.getItem("environment") || DEFAULT_ENVIRONMENT;
+
+      // sets the app API url
+      const selectedEnvironment =
+        localStorage.getItem("environment") || DEFAULT_ENVIRONMENT;
+      window.__API_BASE_URL__ = selectedEnvironment;
+      console.log("🔧 API Base URL configured:", selectedEnvironment);
+
+      environmentSelector.addEventListener("change", (event) => {
+        localStorage.setItem("environment", event.target.value);
+        window.location.hash = "";
+        window.location.reload();
+      });
+
+      // populate org selector with buttons for targeted dev orgs on staging and production
+      const STAGING_ORGS = [
+        "dpechev3",
+        "nmirchev",
+        "niko-clonable",
+        "mdonev",
+        "djenkov-4",
+        "nikispace",
+      ];
+
+      const PRODUCTION_ORGS = [
+        "mindspace-us",
+        "mindspace-de",
+        "mindspace-il",
+        "xwhy",
+        "quantumquarters",
+      ];
+
+      const orgs = {
+        "http://localhost:3000": STAGING_ORGS,
+        "https://e-commerce-staging.officernd.com": STAGING_ORGS,
+        "https://e-commerce.officernd.com": PRODUCTION_ORGS,
+      };
+
+      const orgSelector = document.getElementById("org-selector");
+      orgs[selectedEnvironment].forEach((org) => {
+        const button = document.createElement("button");
+        button.textContent = org;
+        orgSelector.appendChild(button);
+
+        // switch to the targeted org on button click
+        button.addEventListener("click", (event) => {
+          const orgSlug = event.target.textContent;
+          window.location.hash = `/${orgSlug}`;
+          window.location.reload();
+        });
+      });
+
+      const orgSlugInput = document.getElementById("org-slug-input");
+
+      const customInputChangeHandler = (event) => {
+        const orgSlug = orgSlugInput.value;
+        window.location.hash = `/${orgSlug}`;
+        window.location.reload();
+      };
+
+      orgSlugInput.addEventListener(
+        "keydown",
+        (event) => event.key === "Enter" && customInputChangeHandler(event),
+      );
+      const setOrgSlugButton = document.getElementById("set-org-slug-button");
+      setOrgSlugButton.addEventListener("click", customInputChangeHandler);
+
+      // change the html lang attribute on language selector value change (observed and synced with the growth-hub language in the web component)
+      const languageSelector = document.getElementById("language-selector");
+      languageSelector.addEventListener("change", (event) => {
+        const selectedLanguage = event.target.value;
+        document.documentElement.lang = selectedLanguage;
+      });
+
+      const DEFAULT_SLUG =
+        selectedEnvironment === "https://e-commerce-staging.officernd.com" ||
+        selectedEnvironment === "http://localhost:3000"
+          ? "dpechev3"
+          : "mindspace-us";
+
+      // fetch the actual available languages for the targeted org and populate the language selector with the available options
+      const orgSlug = window.location.hash.split("/")[1] || DEFAULT_SLUG;
+      growthHub?.setAttribute("slug", orgSlug);
+
+      fetch(`${selectedEnvironment}/i/${orgSlug}/localization/translations`)
+        .then((res) => res.json())
+        .then((languages) => {
+          languages.forEach((language) => {
+            const option = document.createElement("option");
+            option.value = language.locale;
+            option.textContent = language.label;
+            languageSelector.appendChild(option);
+          });
+
+          const initialValue = document.documentElement.lang;
+          const initialLanguageMeta = languages.find(
+            (language) =>
+              language.locale === initialValue ||
+              language.locale
+                .toLowerCase()
+                .startsWith(initialValue.toLowerCase()),
+          );
+
+          languageSelector.value =
+            initialLanguageMeta?.locale ??
+            languages.find((language) => language.default)?.locale;
+        });
+
+      const savedHostPopupMode =
+        localStorage.getItem(HOST_POPUP_MODE_KEY) === "1";
+      const savedHostPopupOpen =
+        localStorage.getItem(HOST_POPUP_OPEN_KEY) !== "0";
+
+      hostPopupModeCheckbox.checked = savedHostPopupMode;
+      applyHostPopupMode(savedHostPopupMode, { openPopup: savedHostPopupOpen });
+    </script>
+
+    <!-- switch to https://e-commerce-staging.officernd.com/webc for the script from staging -->
+    <script src="./lib/webc-loader-production.js"></script>
+  </body>
+</html>
