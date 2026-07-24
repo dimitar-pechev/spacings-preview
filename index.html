@@ -198,7 +198,6 @@
         "environment-selector",
       );
       const environments = [
-        "http://localhost:3000",
         "https://e-commerce-staging.officernd.com",
         "https://e-commerce.officernd.com",
       ];
@@ -243,7 +242,6 @@
       ];
 
       const orgs = {
-        "http://localhost:3000": STAGING_ORGS,
         "https://e-commerce-staging.officernd.com": STAGING_ORGS,
         "https://e-commerce.officernd.com": PRODUCTION_ORGS,
       };
@@ -285,8 +283,7 @@
       });
 
       const DEFAULT_SLUG =
-        selectedEnvironment === "https://e-commerce-staging.officernd.com" ||
-        selectedEnvironment === "http://localhost:3000"
+        selectedEnvironment === "https://e-commerce-staging.officernd.com"
           ? "dpechev3"
           : "mindspace-us";
 
@@ -327,7 +324,6 @@
       applyHostPopupMode(savedHostPopupMode, { openPopup: savedHostPopupOpen });
     </script>
 
-    <!-- switch to https://e-commerce-staging.officernd.com/webc for the script from staging -->
     <script src="./lib/webc-loader-production.js"></script>
   </body>
 </html>
